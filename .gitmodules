@@ -1,0 +1,3 @@
+[submodule "charity-commission-extract"]
+	path = charity-commission-extract
+	url = https://github.com/ncvo/charity-commission-extract
