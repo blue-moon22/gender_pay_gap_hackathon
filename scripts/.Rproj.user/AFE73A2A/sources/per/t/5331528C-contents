@@ -1,0 +1,167 @@
+################################################################################################################################
+#                                              Health V Liver Disease ANALYSIS                                                 #
+#                                     using twin cohort as healthycand RIFSYS baseline for Diseass                             #
+#                                                         MGP ANALYSIS                                                         #
+#                                                    Dr. E. Witherden 19.03.18                                                 #
+################################################################################################################################
+
+# Loading packages/functions ----------------------------------------------
+library(xlsx)
+library("momr")
+library(stringr)
+library(Hmisc)
+library(gplots)
+library(grDevices)
+library(VennDiagram)
+### VICKY: WHAT IS THIS
+source("~/Dropbox/Sequencing_Data/R Studio/momr/momr_scripts/momr_1.1_corrections.R")
+
+################################################################################################################################
+
+# generation of MSP for twin saliva data set -------------------------
+
+# Load the norm_freq data files for analysis
+load("~/Desktop/RIFSYS/Rdata/norm_freq_3M/kcl_data_freq_twin_3M_SALIVE_8.4.RData")
+
+## How to obtain matrix of abundance of the msp ? 
+
+# Load HS8.4 gene catalogue definition file 
+load("~/Desktop/RIFSYS/HS_8.4_oral/hs_oral_8.4_id_size_name.RData") # Id/Size/Name of all genes
+
+### VICKY: WHAT IS THIS
+CAG_all_8.4 <- read.delim("~/Desktop/RIFSYS/HS_8.4_oral/hs_8_4_oral_msp_extended_v2.tsv")
+save(CAG_all_8.4, file="~/Desktop/RIFSYS/HS_8.4_oral/hs_8_4_oral_msp_extended_v2_CAG_all.Rdata", compress=T)
+CAG_8.4 <- split(CAG_all_8.4$gene_id, CAG_all_8.4$msp) # transform data into a list 
+
+# Select MSP with more than 500 genes 
+MSP <- CAG_8.4[as.numeric(summary(CAG_8.4)[,"Length"])>=500] # CAG (= Co-abundance gene group) of more than 500 genes
+
+# Keep only the 50 first genes in each MSP (= the 50 principals genes)
+MSP_MG <- MSP 
+for(i in 1:length(MSP_MG)){
+  MSP_MG[[i]] <- MSP_MG[[i]][1:50] # only the first 50 genes (enough information with them)
+}
+
+CAG <- MSP_MG
+genes <- unique(unlist(CAG)) # genes list
+genes_id <- hs_oral_8.4_id_size_name$gene_id[match(genes,hs_oral_8.4_id_size_name$gene_id)]
+id <- match(genes_id,rownames(data_freq_S_twin)) # id from the catalog of the genes present in our data
+twin_data <- data_freq_S_twin[id,] # get data only from the genes we have
+rownames(twin_data) <- genes
+twin_data[is.na(twin_data)] <- 0 # 22100 genes
+
+# MGS profile 
+twin_prof_MGS_3M <- extractProfiles(CAG,twin_data) # for each MGS, gene freq for each individuals
+
+## mean
+twin_vect_mean_S <- computeFilteredVectors(twin_prof_MGS_3M,filt = 10) # for each MGS, mean freq for each individuals
+N <- rowSums(twin_vect_mean_S) # for each MGS, sum of the freq by individuals
+sum(N>0) 
+twin_vect_mean_S <- twin_vect_mean_S[N>0,]
+
+## median
+twin_vect_med_S <- computeFilteredVectors(twin_prof_MGS_3M,type = "median")
+N <- rowSums(twin_vect_med_S)
+sum(N>0) 
+twin_vect_med_S <- twin_vect_med_S[N>0,]
+
+save(twin_prof_MGS_3M,twin_vect_mean_S,twin_vect_med_S, file="~/Desktop/RIFSYS/Rdata/MGS/twin_MGS_data_SALIVE_8.4_3M.RData", compress=T)
+
+
+# generation of MSP for RIFSYS saliva data set -------------------------
+
+# Load the norm_freq data files for analysis
+load("~/Desktop/RIFSYS/Rdata/norm_freq_3M/kcl_data_freq_3M_SALIVE_8.4.RData")
+
+## How to obtain matrix of abundance of the msp ? 
+
+# Load HS8.4 gene catalogue definition file 
+load("~/Desktop/RIFSYS/HS_8.4_oral/hs_oral_8.4_id_size_name.RData") # Id/Size/Name of all genes
+
+CAG_all_8.4 <- read.delim("~/Desktop/RIFSYS/HS_8.4_oral/hs_8_4_oral_msp_extended_v2.tsv")
+save(CAG_all_8.4, file="~/Desktop/RIFSYS/HS_8.4_oral/hs_8_4_oral_msp_extended_v2_CAG_all.Rdata", compress=T)
+CAG_8.4 <- split(CAG_all_8.4$gene_id, CAG_all_8.4$msp) # transform data into a list 
+
+# Select MSP with more than 500 genes 
+MSP <- CAG_8.4[as.numeric(summary(CAG_8.4)[,"Length"])>=500] # CAG (= Co-abundance gene group) of more than 500 genes
+
+# Keep only the 50 first genes in each MSP (= the 50 principals genes)
+MSP_MG <- MSP 
+for(i in 1:length(MSP_MG)){
+  MSP_MG[[i]] <- MSP_MG[[i]][1:50] # only the first 50 genes (enough information with them)
+}
+
+CAG <- MSP_MG
+genes <- unique(unlist(CAG)) # genes list
+genes_id <- hs_oral_8.4_id_size_name$gene_id[match(genes,hs_oral_8.4_id_size_name$gene_id)]
+id <- match(genes_id,rownames(data_freq_S_3M)) # id from the catalog of the genes present in our data
+RIF_data <- data_freq_S_3M[id,] # get data only from the genes we have
+rownames(RIF_data) <- genes
+RIF_data[is.na(RIF_data)] <- 0 # 22100 genes
+
+# MGS profile 
+RIF_prof_MGS_3M <- extractProfiles(CAG,RIF_data) # for each MGS, gene freq for each individuals
+
+## mean
+RIF_vect_mean_S <- computeFilteredVectors(RIF_prof_MGS_3M,filt = 10) # for each MGS, mean freq for each individuals
+N <- rowSums(RIF_vect_mean_S) # for each MGS, sum of the freq by individuals
+sum(N>0) 
+RIF_vect_mean_S <- RIF_vect_mean_S[N>0,]
+
+## median
+RIF_vect_med_S <- computeFilteredVectors(RIF_prof_MGS_3M,type = "median")
+N <- rowSums(RIF_vect_med_S)
+sum(N>0) 
+RIF_vect_med_S <- RIF_vect_med_S[N>0,]
+
+save(RIF_prof_MGS_3M,RIF_vect_mean_S,RIF_vect_med_S, file="~/Desktop/RIFSYS/Rdata/MGS/RIFSYS_MGS_data_SALIVE_8.4_3M.RData", compress=T)
+
+
+# generation of MSP for baseline RIFSYS saliva data set -------------------------
+
+# Load the norm_freq data files for analysis
+load("~/Desktop/RIFSYS/Rdata/norm_freq_3M/kcl_data_freq_3M_SALIVE_baseline_8.4.RData")
+
+## How to obtain matrix of abundance of the msp ? 
+
+# Load HS8.4 gene catalogue definition file 
+load("~/Desktop/RIFSYS/HS_8.4_oral/hs_oral_8.4_id_size_name.RData") # Id/Size/Name of all genes
+
+CAG_all_8.4 <- read.delim("~/Desktop/RIFSYS/HS_8.4_oral/hs_8_4_oral_msp_extended_v2.tsv")
+save(CAG_all_8.4, file="~/Desktop/RIFSYS/HS_8.4_oral/hs_8_4_oral_msp_extended_v2_CAG_all.Rdata", compress=T)
+CAG_8.4 <- split(CAG_all_8.4$gene_id, CAG_all_8.4$msp) # transform data into a list 
+
+# Select MSP with more than 500 genes 
+MSP <- CAG_8.4[as.numeric(summary(CAG_8.4)[,"Length"])>=500] # CAG (= Co-abundance gene group) of more than 500 genes
+
+# Keep only the 50 first genes in each MSP (= the 50 principals genes)
+MSP_MG <- MSP 
+for(i in 1:length(MSP_MG)){
+  MSP_MG[[i]] <- MSP_MG[[i]][1:50] # only the first 50 genes (enough information with them)
+}
+
+CAG <- MSP_MG
+genes <- unique(unlist(CAG)) # genes list
+genes_id <- hs_oral_8.4_id_size_name$gene_id[match(genes,hs_oral_8.4_id_size_name$gene_id)]
+id <- match(genes_id,rownames(baseline_data_freq_S_3M)) # id from the catalog of the genes present in our data
+RIF_data_baseline <- baseline_data_freq_S_3M[id,] # get data only from the genes we have
+rownames(RIF_data_baseline) <- genes
+RIF_data_baseline[is.na(RIF_data_baseline)] <- 0 # 22100 genes
+
+# MGS profile 
+RIF_baseline_prof_MGS_3M <- extractProfiles(CAG,RIF_data_baseline) # for each MGS, gene freq for each individuals
+
+## mean
+RIF_baseline_vect_mean_S <- computeFilteredVectors(RIF_baseline_prof_MGS_3M,filt = 10) # for each MGS, mean freq for each individuals
+N <- rowSums(RIF_baseline_vect_mean_S) # for each MGS, sum of the freq by individuals
+sum(N>0) 
+RIF_baseline_vect_mean_S <- RIF_baseline_vect_mean_S[N>0,]
+
+## median
+RIF_baseline_vect_med_S <- computeFilteredVectors(RIF_baseline_prof_MGS_3M,type = "median")
+N <- rowSums(RIF_baseline_vect_med_S)
+sum(N>0) 
+RIF_baseline_vect_med_S <- RIF_baseline_vect_med_S[N>0,]
+
+save(RIF_baseline_prof_MGS_3M,RIF_baseline_vect_mean_S,RIF_baseline_vect_med_S, file="~/Desktop/RIFSYS/Rdata/MGS/RIFSYS_baseline_MGS_data_SALIVE_8.4_3M.RData", compress=T)
+

@@ -1,0 +1,22 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1530293006809.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3704001072",
+    "id" : "5331528C",
+    "lastKnownWriteTime" : 1530294001,
+    "last_content_update" : 1530294001898,
+    "path" : "~/Documents/CHMI/Resistome/MSP/MSPmatrix_generation(RIFSYS STUDY).R",
+    "project_path" : null,
+    "properties" : {
+        "cursorPosition" : "30,23",
+        "scrollLine" : "15"
+    },
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
